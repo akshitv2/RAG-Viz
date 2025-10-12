@@ -1,0 +1,7 @@
+umap-learn
+numpy
+matplotlib
+ipywidgets
+tqdm
+pandas
+plotly
