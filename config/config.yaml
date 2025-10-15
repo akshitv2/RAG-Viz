@@ -1,0 +1,30 @@
+hello: world
+mode:
+  prepare_data: true
+embedding_model: all-MiniLM-L6-v2
+dataset:
+  dir: /mnt/85e3eeea-3bda-4255-95a1-833fffd20e34/datasets
+  max_articles: 50
+db:
+  qdrant:
+    connection:
+      host: localhost
+      port: 6333
+      timeout: 30
+  config:
+    path:
+  collections:
+    collection_small:
+      name: wiki_small_chunks
+    collection_large:
+      name: wiki_large_chunks
+  insertion:
+    batch_size: 15
+chunking:
+  chunk_config_large:
+    chunk_size: 1500
+    chunk_overlap: 150
+  chunk_config_small:
+    chunk_size: 400
+    chunk_overlap: 50
+

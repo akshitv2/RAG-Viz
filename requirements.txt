@@ -5,3 +5,6 @@ ipywidgets
 tqdm
 pandas
 plotly
+qdrant-client
+fastembed
+sentence-transformers
