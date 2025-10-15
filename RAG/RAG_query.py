@@ -1,10 +1,10 @@
 from fastembed import SparseTextEmbedding
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import SparseVector
+from qdrant_client.http.models import SparseVector, Filter, MatchValue, FieldCondition
 from sentence_transformers import SentenceTransformer
 
-from RAG.RAG_Retrieve import custom_embed_function
-
+def custom_embed_function(texts, embedding_model):
+    return embedding_model.encode(texts, convert_to_numpy=True).tolist()
 
 def dense_query_search(client: QdrantClient, query_text: str, number_of_results: int = 5, print_results: bool = False):
     print(f"\n--- : Querying Small Chunks for: '{query_text}' ---")
@@ -45,15 +45,17 @@ def sparse_query_search(client: QdrantClient, query_text: str, number_of_results
     return results
 
 
-def get_topics_list(client: QdrantClient, num_topics: int = 10):
+def get_topics_list(client: QdrantClient, num_topics: int = 10, print_results = False):
     result = client.scroll(
         collection_name="wiki_large_chunks",
         limit=num_topics,
         with_payload=True,
         with_vectors=True
     )
-    for point in result[0]:
-        print(point.id, point.payload["title"])
+    if(print_results):
+        for point in result[0]:
+            print(point.payload["title"])
+    return [point.payload["title"] for point in result[0]]
 
 
 def hierarchical_search(client: QdrantClient, query_text: str, use_deep_embedding: bool = True,
@@ -71,3 +73,35 @@ def hierarchical_search(client: QdrantClient, query_text: str, use_deep_embeddin
     if print_results:
         [print(point.payload["text"].replace("\n", " ")) for point in results]
     return results
+def get_point_with_common_parent_id(client:QdrantClient, collection_name, parent_id, n=10, print_results: bool = False):
+    points = client.scroll(
+        collection_name=collection_name,
+        scroll_filter=Filter(
+            must=[FieldCondition(key="parent_id", match=MatchValue(value=parent_id))]
+        ),
+        limit=n,
+         with_vectors=True,
+        with_payload=True
+    )
+
+    if print_results:
+        [print(point) for point in points[0]]
+    return points
+
+def get_point_with_common_title(client:QdrantClient, collection_name, title, n=10):
+    points = client.scroll(
+        collection_name=collection_name,
+        scroll_filter=Filter(
+            must=[FieldCondition(key="title", match=MatchValue(value=title))]
+        ),
+        limit=n  # adjust as needed
+    )
+    return points
+
+def get_parent_title(client: QdrantClient, parent_id, collection_name="wiki_large_chunks"):
+    result = client.retrieve(
+        collection_name="wiki_large_chunks",
+        ids=[parent_id],
+        with_payload=True
+    )
+    return result[0].payload["title"]
