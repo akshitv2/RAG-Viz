@@ -94,6 +94,8 @@ def get_point_with_common_title(client:QdrantClient, collection_name, title, n=1
         scroll_filter=Filter(
             must=[FieldCondition(key="title", match=MatchValue(value=title))]
         ),
+        with_payload=True,
+        with_vectors=True,
         limit=n  # adjust as needed
     )
     return points
